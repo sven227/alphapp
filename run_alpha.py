@@ -13,7 +13,7 @@ root_path = alphaDB.path
 
 pg_path = crea_path4symbol("PG", alphaDB.path)
 print(pg_path)
-
+"""
 # _df = read_symbol('PG', api_key_alpha)
 # print(_df)
 
@@ -24,7 +24,7 @@ for path in _path_list:
 
 my_date = persist_data(symbol_list, _dict, _path_list)
 print(my_date)
-
+"""
 
 # my_dict, path_list = mal.read_data(alphaDB.path, alphaDB.api_key_alpha, symbol_list)
 # for path in path_list:
