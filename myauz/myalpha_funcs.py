@@ -9,14 +9,18 @@ import pandas as pd
 def read_symbol(symbol, api_key_alpha, function='TIME_SERIES_DAILY_ADJUSTED'):
     url = (
         f'https://www.alphavantage.co/query?function={function}&symbol={symbol}&outputsize=full&apikey={api_key_alpha}&datatype=csv')
+
     _df = pd.read_csv(url)
+    _df.dropna(inplace=True)
+
+    _df['timestamp'] = pd.to_datetime(_df['timestamp'], infer_datetime_format='%Y--%m-%d')
     _df.set_index('timestamp', inplace=True)
-    _df.index = pd.to_datetime(_df.index)
     _df.sort_values(by=['timestamp'], axis='index', ascending=True, inplace=True)
     return _df
 
 
 def create_path4symbol(symbol, _root_path):
+    symbol.replace('.', '_')
     _path_symbol = _root_path + '/data/{0}/daily_{1}.csv'.format(symbol, symbol)
     dir_name = _root_path + '/data/{0}'.format(symbol)
     if not os.path.exists(dir_name):
@@ -45,6 +49,7 @@ def read_data(_root_path, _api_key_alpha, _symbol_list, function='TIME_SERIES_DA
 def persist_data(symbol_list, _dict, _path_list):
     for symbol, path in zip(symbol_list, _path_list):
         _df = _dict[symbol]
+
         _df.to_csv(path)
     path = _path_list[-1]
     _modTimesinceEpoc = os.path.getmtime(path)
