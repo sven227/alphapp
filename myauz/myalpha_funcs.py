@@ -1,7 +1,11 @@
 import os
-from datetime import datetime
-
+from functools import reduce
+import numpy as np
 import pandas as pd
+from datetime import datetime, timedelta, date
+
+from time import sleep
+import glob
 
 
 ############helpers##########
@@ -12,10 +16,12 @@ def read_symbol(symbol, api_key_alpha, function='TIME_SERIES_DAILY_ADJUSTED'):
 
     _df = pd.read_csv(url)
     _df.dropna(inplace=True)
-
-    _df['timestamp'] = pd.to_datetime(_df['timestamp'], infer_datetime_format='%Y--%m-%d')
-    _df.set_index('timestamp', inplace=True)
-    _df.sort_values(by=['timestamp'], axis='index', ascending=True, inplace=True)
+    try:
+        _df['timestamp'] = pd.to_datetime(_df['timestamp'], infer_datetime_format='%Y--%m-%d')
+        _df.set_index('timestamp', inplace=True)
+        _df.sort_values(by=['timestamp'], axis='index', ascending=True, inplace=True)
+    except IOError:
+        print(symbol, 'does not exist in alpha-vantage db')
     return _df
 
 
@@ -29,6 +35,96 @@ def create_path4symbol(symbol, _root_path):
     else:
         print("Directory ", dir_name, " already exists")
     return _path_symbol
+
+
+# get last 100 registries of time_series daily from alpha-vantage
+def get_alphav_last100(symbol, api_key_alpha, function='TIME_SERIES_DAILY_ADJUSTED', outputsize='compact'):
+    url = f'https://www.alphavantage.co/query?function={function}&symbol={symbol}&outputsize=outputsize&apikey={api_key_alpha}&datatype=csv'
+    name = 'daily' + '_' + symbol
+    _df = pd.read_csv(url)
+    _df.set_index('timestamp', inplace=True)
+    _df.index = pd.to_datetime(_df.index)
+    _df.sort_values(by=['timestamp'], axis='index', ascending=True, inplace=True)
+    return _df
+
+
+# read from csv - input list of symbol-tickers and returns a dictionary with key <symbol> and dataframe as value
+def get_daily(symbol_list, root_path, startd, endd, wd=None, usecols=None):
+    if wd == None:
+        wd = os.getcwd()
+
+    # suffixes = list( map( lambda x:  '_'+x ,symbol_list))
+    path_list = {symbol: create_path4symbol(symbol, root_path) for symbol in symbol_list}
+    dict = retrieveDF(path_list, startd, endd, usecols)
+    # return dictionary with key=df_<symbol> and the dataframe as value
+    return dict
+
+
+
+# read from csv with path_list  - is called from get_daily
+def retrieveDF(path_list, startd, endd, usecols, rename_column=False):
+    if startd == '':
+        startd, endd = get_startd_endd_default()
+    if endd == '':
+        startd, endd = get_startd_endd_default()
+
+    dict_of_df = {}
+    for symbol, path in path_list.items():
+        # key_name = 'df_'+symbol
+        key_name = symbol
+        _df = pd.read_csv(path, usecols=usecols)
+        _df.set_index('timestamp', inplace=True)
+        _df.index = pd.to_datetime(_df.index)
+        # _df.sort_index(inplace=True)
+        _df.sort_values(by=['timestamp'], axis='index', ascending=True, inplace=True)
+        # when sorted by date in ascending order the slice by startd:endd is correct
+        _df = _df.loc[startd:endd]
+        # _df = _df.loc[endd:startd]
+
+        if rename_column == True:
+            column = f'{symbol}'
+            dict_of_df[key_name] = _df.rename(columns={'adjusted_close': column})
+        else:
+            dict_of_df[key_name] = _df
+    return dict_of_df
+
+
+def retrieveDFfinal(dict, suffixes):
+    dict2list = lambda dic: [(v) for (v) in dic.values()]
+    df = reduce(lambda left, right: pd.merge(left, right, on='timestamp', how='outer', suffixes=suffixes),
+                dict2list(dict))
+    df.index = pd.to_datetime(df.index)
+    # cambiamos el sort a ascending para el portfolio?
+    df.sort_values(by=['timestamp'], axis='index', ascending=True, inplace=True)
+    return df
+
+
+###############additional little helpers##########
+def get_startd_endd_default():
+    _startd = '2000-01-01'
+    _endd = '2020-12-31'
+    return _startd, _endd
+
+
+def getlastdate(symbol):
+    startd, endd = get_startd_endd_default()
+    dict = get_daily([symbol], startd, endd)
+    # key_name = 'df_'+symbol
+    pd = dict[symbol].tail(1)
+    # return pd.index[0]
+    return string2date(pd.index[0])
+
+
+def string2date(date_string, format="%Y-%m-%d"):
+    if type(date_string) == str:
+        date_time_obj = datetime.strptime(date_string, format)
+        return date_time_obj
+    else:
+        return date_string
+
+
+def date2string(date_time_obj, format="%Y-%m-%d"):
+    return date_time_obj.strftime(format)
 
 
 ###############call these ones##########
@@ -57,3 +153,78 @@ def persist_data(symbol_list, _dict, _path_list):
     print("Last Modified Time : ", _modificationTime)
     del _dict
     return _modificationTime
+
+
+# read from csv one specific ticker - calls get_daily -> retrieveDF
+def get_daily_symbol(symbol, root_path, startd='', endd='', wd=None, usecols=None):
+    dict = get_daily([symbol], root_path, startd, endd)
+    # key_name = 'df_'+symbol
+    key_name = symbol
+    # return panda dataframe
+    _df = dict[key_name]
+    _df.index = pd.to_datetime(_df.index)
+    # _df.sort_values(by=['timestamp'],axis='index',ascending=True,inplace=True)
+    return _df
+
+
+def update_csv(symbol_list, api_key_alpha, root_path):
+    counter = 0
+    for symbol in symbol_list:
+        counter += counter + 1
+        print("")
+        print("processing symbol: " + symbol)
+        df_latest = get_alphav_last100(symbol, api_key_alpha)
+        df_latest.head(1)
+        df_latest.tail(1)
+
+        _xdo = df_latest.tail(1).index[0]
+        print("last stock-date available from alpha_vantage:", date2string(_xdo))
+        _xdo.date()
+
+        df_from_csv = get_daily_symbol(symbol, root_path)
+        _xdo = df_from_csv.tail(1).index[0]
+        df_filtered = df_latest.loc[df_latest.index > _xdo]
+        print("number of entries we need to append to csv:", df_filtered.size)
+
+        print("retrieving head data from csv")
+        df_latest.head(1)
+        df_latest.tail(1)
+        df_from_csv.sort_values(by=['timestamp'], axis='index', ascending=True, inplace=True)
+        if df_filtered.dropna().empty:
+            print("nothing to append")
+        else:
+            df_updated = df_from_csv.append(df_filtered, verify_integrity=False, sort=False)
+            print("the final csv to be updated")
+            df_updated.head(1)
+            df_updated.tail(1)
+            df_updated.index
+            # write_csv_one_by_one_df(symbol, df_updated, counter)
+            _path_symbol = create_path4symbol(symbol, root_path)
+            df_updated.to_csv(_path_symbol.format(symbol, symbol))
+    return
+
+
+def compose_portfolio(symbol_list,root_path, startd='2000-01-01', endd='',usecols=['timestamp','adjusted_close']):
+    #loop through dict and join columns with inner join to one new dataframe
+    # Pre-req. file must exist in relative path e.g.: ./data/PG/daily_PG.csv
+    # get all files with symbols we are interested in into a list
+    # read file of symbol one by one into dataframe
+    # rename column_names to close_PG, close_{}.format(symbol)
+    # reset index to timeframe inplace= true
+    # join the dataframes into one only using inner join (no NaN)
+    # columns: open	high	low	close	adjusted_close	volume	dividend_amount	split_coefficient
+    if (endd==''):
+        today=date.today()
+        endd = date2string(today)
+    suffixes = list(map(lambda x:  '_'+x ,symbol_list))
+    wd = os.getcwd()
+
+    #path_list =  {symbol: composePath(wd, '/data/', symbol) for symbol in symbol_list}
+    path_list = {symbol: create_path4symbol(symbol, root_path) for symbol in symbol_list}
+    path_list
+
+    dict = retrieveDF(path_list, startd, endd,usecols, True)
+    df_final = retrieveDFfinal(dict,suffixes)
+    df_final.sort_values(by=['timestamp'],axis='index',ascending=True,inplace=True)
+    #df_final.tail()
+    return df_final
