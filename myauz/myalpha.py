@@ -1,5 +1,5 @@
 secret = {
-    "api_key_alpha": "some_api_key",
+    "api_key_alpha": "77K8XPSR3XWWZJ80",
     "path": "a_path"
 }
 

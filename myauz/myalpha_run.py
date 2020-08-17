@@ -7,7 +7,7 @@ from myauz.myalpha_funcs import (
     retrieveDF,
     string2date,
     retrievePF,
-    initialize_df,
+    initialize_DF,
     time_sleep,
     create_path_list,
     refresh_db,
@@ -65,4 +65,3 @@ path_list = create_path_list(symbol_list, root_path)
 ### create dataframe with portfolio
 df_pf = retrievePF(symbol_list, path_list, startd, endd, usecols, rename_column)
 print(df_pf)
-
