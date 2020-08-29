@@ -269,7 +269,7 @@ def refresh_db(root_path, api_key_alpha, symbol_list, full_refresh_alphavantage=
 
 
 def crea_path4symbol(symbol, _root_path):
-    _path_symbol = _root_path + '/data/{0}/daily_{1}.csv'.format(symbol, symbol)
+    _path_symbol = _root_path + "/data/{0}/daily_{1}.csv".format(symbol, symbol)
     return _path_symbol
 
 
@@ -295,7 +295,9 @@ def initialize_df(symbol_list, startd, endd):
 
 
 def retrievePF(symbol_list, path_list, startd, endd, usecols, rename_column=True):
+
     _df_master = initialize_df(symbol_list, startd, endd)
+
     for symbol, path in list(path_list.items()):
         # key_name = 'df_'+symbol
         key_name = symbol
@@ -304,10 +306,17 @@ def retrievePF(symbol_list, path_list, startd, endd, usecols, rename_column=True
         _df.index = pd.to_datetime(_df.index)
         _df.sort_values(by=["timestamp"], axis="index", ascending=True, inplace=True)
         _df = _df.loc[startd:endd]
+
         if rename_column == True:
             column = f"{symbol}"
-            _df_master[key_name] = _df.rename(columns={"adjusted_close": column})
+            if "adjusted_close" in usecols:
+                _df_master[key_name] = _df.rename(columns={"adjusted_close": column})
+            elif "volume" in usecols:
+                _df_master[key_name] = _df.rename(columns={"volume": column})
+            else:
+                print("usecols does not contain valid value")
         else:
             _df_master[key_name] = _df
+
         _df_master.dropna(inplace=True)
     return _df_master

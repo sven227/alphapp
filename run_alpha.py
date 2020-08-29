@@ -12,9 +12,8 @@ from myauz.myalpha_funcs import (
     create_path_list,
     refresh_db,
 )
-from myauz.myalpha_libs import StocksDb
 
-from myauz.myfuncs import crea_path4symbol
+from myauz.myalpha_libs import StocksDb
 
 import time
 
@@ -46,6 +45,7 @@ print("\n", alphaDB.api_key_alpha, alphaDB.path)
 print("\n\n")
 api_key_alpha = alphaDB.api_key_alpha
 root_path = alphaDB.path
+print("root_path: ", root_path)
 read_from_alphavantage = False
 rename_column = True
 
@@ -54,7 +54,10 @@ from datetime import date
 import datetime
 import pandas as pd
 
-usecols = ["timestamp", "adjusted_close"]
+#usecols = ["timestamp", "adjusted_close"]
+
+usecols = ["timestamp", "volume"]
+
 startd = "2020-01-01"
 endd = "2020-08-14"
 path_list = create_path_list(symbol_list, root_path)
@@ -64,5 +67,4 @@ path_list = create_path_list(symbol_list, root_path)
 
 ### create dataframe with portfolio
 df_pf = retrievePF(symbol_list, path_list, startd, endd, usecols, rename_column)
-print(df_pf)
-
+print(df_pf) 
