@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, date
 
 from time import sleep
 import glob
+import time
 
 
 ############helpers##########
@@ -86,11 +87,16 @@ def retrieveDF(path_list, startd, endd, usecols, rename_column=False):
         # when sorted by date in ascending order the slice by startd:endd is correct
         _df = _df.loc[startd:endd]
         # _df = _df.loc[endd:startd]
-
+          
         if rename_column == True:
-            column = f"{symbol}"
-            dict_of_df[key_name] = _df.rename(columns={"adjusted_close": column})
-        else:
+             column = f"{symbol}"            
+             if "adjusted_close" in usecols:
+                dict_of_df[key_name] = _df.rename(columns={"adjusted_close": column})
+             elif "volume" in usecols:
+                dict_of_df[key_name] = _df.rename(columns={"volume": column})
+             else:
+                print("usecols does not contain valid value")
+        else: 
             dict_of_df[key_name] = _df
     return dict_of_df
 
