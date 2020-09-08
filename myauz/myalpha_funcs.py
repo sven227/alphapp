@@ -9,7 +9,7 @@ import glob
 import time
 
 
-############helpers##########
+############_internal_helpers_(lookup external helpers too)##########
 
 
 def read_symbol(symbol, api_key_alpha, function="TIME_SERIES_DAILY_ADJUSTED"):
@@ -101,7 +101,7 @@ def retrieveDF(path_list, startd, endd, usecols, rename_column=False):
     return dict_of_df
 
 
-###############additional little helpers##########
+############### additional little internal helpers  ##########
 def get_startd_endd_default():
     _startd = "2000-01-01"
     _endd = "2020-12-31"
@@ -129,7 +129,7 @@ def date2string(date_time_obj, format="%Y-%m-%d"):
     return date_time_obj.strftime(format)
 
 
-###############call these ones##########
+###############external: call these ones from your scripts##########
 def read_data(
     _root_path, _api_key_alpha, _symbol_list, function="TIME_SERIES_DAILY_ADJUSTED"
 ):
@@ -248,7 +248,7 @@ def compose_portfolio(
     return df_final
 
 
-####################_____run____#################
+####################_external helpers: use these helpers from your notebook__#################
 
 
 def refresh_db(root_path, api_key_alpha, symbol_list, full_refresh_alphavantage="True"):
