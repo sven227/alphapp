@@ -214,6 +214,34 @@ def update_csv(symbol_list, api_key_alpha, root_path):
     return
 
 
+def retrievePF(symbol_list, path_list, startd, endd, usecols, rename_column=True):
+
+    _df_master = initialize_df(symbol_list, startd, endd)
+
+    for symbol, path in list(path_list.items()):
+        # key_name = 'df_'+symbol
+        key_name = symbol
+        _df = pd.read_csv(path, usecols=usecols)
+        _df.set_index("timestamp", inplace=True)
+        _df.index = pd.to_datetime(_df.index)
+        _df.sort_values(by=["timestamp"], axis="index", ascending=True, inplace=True)
+        _df = _df.loc[startd:endd]
+
+        if rename_column == True:
+            column = f"{symbol}"
+            if "adjusted_close" in usecols:
+                _df_master[key_name] = _df.rename(columns={"adjusted_close": column})
+            elif "volume" in usecols:
+                _df_master[key_name] = _df.rename(columns={"volume": column})
+            else:
+                print("usecols does not contain valid value")
+        else:
+            _df_master[key_name] = _df
+
+        _df_master.dropna(inplace=True)
+    return _df_master
+
+
 def compose_portfolio(
     symbol_list,
     root_path,
@@ -241,8 +269,8 @@ def compose_portfolio(
     }
     path_list
 
-    dict = retrieveDF(path_list, startd, endd, usecols, True)
-    df_final = retrieveDFfinal(dict, suffixes)
+    _dict = retrieveDF(path_list, startd, endd, usecols, True)
+    df_final = retrieveDFfinal(_dict, suffixes)
     df_final.sort_values(by=["timestamp"], axis="index", ascending=True, inplace=True)
     # df_final.tail()
     return df_final
@@ -251,7 +279,7 @@ def compose_portfolio(
 ####################_external helpers: use these helpers from your notebook__#################
 
 
-def refresh_db(root_path, api_key_alpha, symbol_list, full_refresh_alphavantage="True"):
+def refresh_db(root_path, api_key_alpha, symbol_list, full_refresh_alphavantage=True):
     if full_refresh_alphavantage is True:
         for index, symbol in enumerate(symbol_list):
             _secs_to_wait = time_sleep(index)
@@ -290,6 +318,7 @@ def time_sleep(index):
 
 
 def initialize_df(symbol_list, startd, endd):
+  
     end_date = string2date(endd)
     start_date = string2date(startd)
     periods = (end_date - start_date).days
@@ -300,29 +329,3 @@ def initialize_df(symbol_list, startd, endd):
     return _df
 
 
-def retrievePF(symbol_list, path_list, startd, endd, usecols, rename_column=True):
-
-    _df_master = initialize_df(symbol_list, startd, endd)
-
-    for symbol, path in list(path_list.items()):
-        # key_name = 'df_'+symbol
-        key_name = symbol
-        _df = pd.read_csv(path, usecols=usecols)
-        _df.set_index("timestamp", inplace=True)
-        _df.index = pd.to_datetime(_df.index)
-        _df.sort_values(by=["timestamp"], axis="index", ascending=True, inplace=True)
-        _df = _df.loc[startd:endd]
-
-        if rename_column == True:
-            column = f"{symbol}"
-            if "adjusted_close" in usecols:
-                _df_master[key_name] = _df.rename(columns={"adjusted_close": column})
-            elif "volume" in usecols:
-                _df_master[key_name] = _df.rename(columns={"volume": column})
-            else:
-                print("usecols does not contain valid value")
-        else:
-            _df_master[key_name] = _df
-
-        _df_master.dropna(inplace=True)
-    return _df_master

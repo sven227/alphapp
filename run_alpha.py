@@ -13,7 +13,10 @@ from myauz.myalpha_funcs import (
     refresh_db,
 )
 
-from myauz.myalpha_libs import StocksDb
+#this is only for ipad pyto:
+#from myauz.myalpha_libs import StocksDb
+#use this one instead:
+from myauz.myalpha_libs_universal import StocksDb
 
 import time
 
