@@ -238,7 +238,7 @@ def retrievePF(symbol_list, path_list, startd, endd, usecols, rename_column=True
         else:
             _df_master[key_name] = _df
 
-        _df_master.dropna(inplace=True)
+        _df_master.dropna(axis=0,how='all',thresh=2,inplace=True)
     return _df_master
 
 
