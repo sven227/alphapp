@@ -74,7 +74,12 @@ def retrieveDF(path_list, startd, endd, usecols, rename_column=False):
         startd, endd = get_startd_endd_default()
     if endd == "":
         startd, endd = get_startd_endd_default()
-
+# endd+1 because _df_loc[startd:endd] does not select until endd but until 1 day before endd
+#    endd_date_object = string2date(endd)
+#    endd_date_object = endd_date_object + timedelta(days=1)
+#    endd = date2string(endd_date_object)
+        
+        
     dict_of_df = {}
     for symbol, path in list(path_list.items()):
         # key_name = 'df_'+symbol
@@ -163,6 +168,9 @@ def persist_data(symbol_list, _dict, _path_list):
 
 # read from csv one specific ticker - calls get_daily -> retrieveDF
 def get_daily_symbol(symbol, root_path, startd="", endd="", wd=None, usecols=None):
+    """
+    read from csv one specific ticker - calls get_daily -> retrieveDF
+    """
     dict = get_daily([symbol], root_path, startd, endd)
     # key_name = 'df_'+symbol
     key_name = symbol
@@ -217,6 +225,10 @@ def update_csv(symbol_list, api_key_alpha, root_path):
 def retrievePF(symbol_list, path_list, startd, endd, usecols, rename_column=True):
 
     _df_master = initialize_df(symbol_list, startd, endd)
+# endd+1 because _df_loc[startd:endd] does not select until endd but until 1 day before endd
+#    endd_date_object = string2date(endd)
+#    endd_date_object = endd_date_object + timedelta(days=1)
+#    endd = date2string(endd_date_object)
 
     for symbol, path in list(path_list.items()):
         # key_name = 'df_'+symbol

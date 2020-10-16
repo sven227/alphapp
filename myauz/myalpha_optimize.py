@@ -1,3 +1,5 @@
+import numpy as np
+
 # filter columns(symbols) in dataframe  by bool_list(symbols = True - this is the _included list)
 def pf_filtered(_pf, _startd, _included):
     if not (_startd):
@@ -5,7 +7,7 @@ def pf_filtered(_pf, _startd, _included):
     if _included is []:
         return _pf
     else: 
-        return _pf.loc[startd:,_included]
+        return _pf.loc[_startd:,_included]
 
     
 from itertools import compress
@@ -40,11 +42,11 @@ def determine_earliest_notation(_pf):
 #################
 
 
-
-
-
 def calc_weights(_invested_dict):
-    
+    """
+    # input dictionary of invested items {"MSFT": float(value),...}
+    # output sum of_total_investment  and a dictionary of weights
+    """
     _invested_list = list(_invested_dict.values())
     _invested_array =np.array(_invested_list)
     _total_investment=np.sum(_invested_array)
