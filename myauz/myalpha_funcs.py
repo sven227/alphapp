@@ -10,14 +10,17 @@ import time
 
 
 ############_internal_helpers_(lookup external helpers too)##########
+#https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=IBM&apikey=demo
 
-
-def read_symbol(symbol, api_key_alpha, function="TIME_SERIES_DAILY_ADJUSTED"):
+def read_symbol(symbol, api_key_alpha, function="TIME_SERIES_DAILY"):
     url = f"https://www.alphavantage.co/query?function={function}&symbol={symbol}&outputsize=full&apikey={api_key_alpha}&datatype=csv"
-
-    _df = pd.read_csv(url)
-    _df.dropna(inplace=True)
-
+    try:
+        _df = pd.read_csv(url)
+        _df.dropna(inplace=True)
+        print(_df.head())
+    except:
+        print("\n something went wrong with reading from alphavantage")
+    
     try:
         _df["timestamp"] = pd.to_datetime(
             _df["timestamp"], infer_datetime_format="%Y—%m-%d"
@@ -26,6 +29,7 @@ def read_symbol(symbol, api_key_alpha, function="TIME_SERIES_DAILY_ADJUSTED"):
         _df.sort_values(by=["timestamp"], axis="index", ascending=True, inplace=True)
     except IOError:
         print((symbol, "does not exist in alpha-vantage db"))
+
     return _df
 
 
@@ -43,7 +47,7 @@ def create_path4symbol(symbol, _root_path):
 
 # get last 100 registries of time_series daily from alpha-vantage
 def get_alphav_last100(
-    symbol, api_key_alpha, function="TIME_SERIES_DAILY_ADJUSTED", outputsize="compact"
+    symbol, api_key_alpha, function="TIME_SERIES_DAILY", outputsize="compact"
 ):
     url = f"https://www.alphavantage.co/query?function={function}&symbol={symbol}&outputsize=outputsize&apikey={api_key_alpha}&datatype=csv"
     name = "daily" + "_" + symbol
@@ -70,6 +74,9 @@ def get_daily(symbol_list, root_path, startd, endd, wd=None, usecols=None):
 
 # read from csv with path_list  - is called from get_daily
 def retrieveDF(path_list, startd, endd, usecols, rename_column=False):
+    """
+    retrieve stock notations for one or more symbols in path_list
+    """
     if startd == "":
         startd, endd = get_startd_endd_default()
     if endd == "":
@@ -99,6 +106,8 @@ def retrieveDF(path_list, startd, endd, usecols, rename_column=False):
                 dict_of_df[key_name] = _df.rename(columns={"adjusted_close": column})
              elif "volume" in usecols:
                 dict_of_df[key_name] = _df.rename(columns={"volume": column})
+             elif "close" in usecols:
+                dict_of_df[key_name] = _df.rename(columns={"close": column})
              else:
                 print("usecols does not contain valid value")
         else: 
@@ -136,7 +145,7 @@ def date2string(date_time_obj, format="%Y-%m-%d"):
 
 ###############external: call these ones from your scripts##########
 def read_data(
-    _root_path, _api_key_alpha, _symbol_list, function="TIME_SERIES_DAILY_ADJUSTED"
+    _root_path, _api_key_alpha, _symbol_list, function="TIME_SERIES_DAILY"
 ):
     num = len(_symbol_list)
     _dict = {}
@@ -245,6 +254,8 @@ def retrievePF(symbol_list, path_list, startd, endd, usecols, rename_column=True
                 _df_master[key_name] = _df.rename(columns={"adjusted_close": column})
             elif "volume" in usecols:
                 _df_master[key_name] = _df.rename(columns={"volume": column})
+            elif "close" in usecols:
+                _df_master[key_name] = _df.rename(columns={"close": column})    
             else:
                 print("usecols does not contain valid value")
         else:
@@ -259,7 +270,7 @@ def compose_portfolio(
     root_path,
     startd="2000-01-01",
     endd="",
-    usecols=["timestamp", "adjusted_close"],
+    usecols=["timestamp", "close"],
 ):
     # loop through dict and join columns with inner join to one new dataframe
     # Pre-req. file must exist in relative path e.g.: ./data/PG/daily_PG.csv

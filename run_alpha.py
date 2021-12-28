@@ -13,6 +13,7 @@ from myauz.myalpha_funcs import (
     refresh_db,
 )
 
+
 #this is only for ipad pyto:
 #from myauz.myalpha_libs import StocksDb
 #use this one instead:
@@ -62,12 +63,15 @@ import pandas as pd
 usecols = ["timestamp", "volume"]
 
 startd = "2020-01-01"
-endd = "2020-08-14"
+endd = "2021-12-26"
 path_list = create_path_list(symbol_list, root_path)
 
 
-# refresh_db(root_path, api_key_alpha, symbol_list, False)
+df_pf = refresh_db(root_path, api_key_alpha, symbol_list, True)
 
 ### create dataframe with portfolio
 df_pf = retrievePF(symbol_list, path_list, startd, endd, usecols, rename_column)
-print(df_pf) 
+
+print(df_pf)
+
+print(df_pf.columns.values)
