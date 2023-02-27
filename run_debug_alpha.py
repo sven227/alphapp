@@ -63,7 +63,7 @@ import pandas as pd
 usecols = ["timestamp", "volume"]
 
 startd = "2020-01-01"
-endd = "2021-12-26"
+endd = "2023-02-27"
 path_list = create_path_list(symbol_list, root_path)
 
 

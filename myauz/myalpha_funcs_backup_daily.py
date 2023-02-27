@@ -12,7 +12,7 @@ import time
 ############_internal_helpers_(lookup external helpers too)##########
 #https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=IBM&apikey=demo
 
-def read_symbol(symbol, api_key_alpha, function="TIME_SERIES_DAILY_ADJUSTED"):
+def read_symbol(symbol, api_key_alpha, function="TIME_SERIES_DAILY"):
     url = f"https://www.alphavantage.co/query?function={function}&symbol={symbol}&outputsize=full&apikey={api_key_alpha}&datatype=csv"
     try:
         _df = pd.read_csv(url)
@@ -47,7 +47,7 @@ def create_path4symbol(symbol, _root_path):
 
 # get last 100 registries of time_series daily from alpha-vantage
 def get_alphav_last100(
-    symbol, api_key_alpha, function="TIME_SERIES_DAILY_ADJUSTED", outputsize="compact"
+    symbol, api_key_alpha, function="TIME_SERIES_DAILY", outputsize="compact"
 ):
     url = f"https://www.alphavantage.co/query?function={function}&symbol={symbol}&outputsize=outputsize&apikey={api_key_alpha}&datatype=csv"
     name = "daily" + "_" + symbol
@@ -145,7 +145,7 @@ def date2string(date_time_obj, format="%Y-%m-%d"):
 
 ###############external: call these ones from your scripts##########
 def read_data(
-    _root_path, _api_key_alpha, _symbol_list, function="TIME_SERIES_DAILY_ADJUSTED"
+    _root_path, _api_key_alpha, _symbol_list, function="TIME_SERIES_DAILY"
 ):
     num = len(_symbol_list)
     _dict = {}
@@ -261,8 +261,7 @@ def retrievePF(symbol_list, path_list, startd, endd, usecols, rename_column=True
         else:
             _df_master[key_name] = _df
 
-#       _df_master.dropna(axis=0,how='all',thresh=2,inplace=True)
-        _df_master.dropna(axis=0,how='all',inplace=True)
+        _df_master.dropna(axis=0,how='all',thresh=2,inplace=True)
     return _df_master
 
 
